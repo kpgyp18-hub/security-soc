@@ -1,0 +1,41 @@
+# 환경 변수 (민감 정보)
+.env
+.env.local
+.env.*.local
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.venv/
+venv/
+env/
+
+# ML 모델 및 데이터 (용량이 큰 파일 - CICIDS2017 데이터셋)
+ml-server/model/*.pkl
+ml-server/model/*.joblib
+ml-server/model/*.bin
+ml-server/data/
+
+# 빌드 결과물
+dist/
+build/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Claude 내부 설정
+.claude/
