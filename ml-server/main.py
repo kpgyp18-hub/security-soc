@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import joblib
 import numpy as np
+import json
 import os
 
 app = FastAPI(title="IDS ML Server")
@@ -91,6 +92,15 @@ def predict(features: TrafficFeatures):
         confidence=float(proba[pred_idx]),
         probabilities={cls: float(p) for cls, p in zip(classes, proba)},
     )
+
+
+@app.get("/metrics")
+def get_metrics():
+    path = "model/metrics.json"
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="메트릭 파일이 없습니다. train.py를 먼저 실행하세요.")
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 if __name__ == "__main__":

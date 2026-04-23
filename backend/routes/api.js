@@ -1,7 +1,8 @@
 const express = require("express");
 const axios = require("axios");
 const { Pool } = require("pg");
-const { getEvents, exportEvents, getStats } = require("../db");
+const { getEvents, exportEvents, getStats, getIncidents, createIncident, updateIncident, deleteIncident } = require("../db");
+const alertManager = require("../alerts/alertManager");
 
 const router = express.Router();
 
@@ -126,6 +127,95 @@ router.get("/health", async (req, res) => {
   }
 
   res.json(result);
+});
+
+// ── 알림 임계값 규칙 ──────────────────────────────────────────────────────────
+router.get("/alert-rules", (req, res) => {
+  res.json(alertManager.getAlertRules());
+});
+
+router.put("/alert-rules/:label", (req, res) => {
+  const { label }             = req.params;
+  const { threshold, windowSec } = req.body;
+  const ok = alertManager.updateAlertRule(label, { threshold, windowSec });
+  if (!ok) return res.status(404).json({ error: "규칙을 찾을 수 없습니다." });
+  res.json({ success: true, rules: alertManager.getAlertRules() });
+});
+
+// ── 일별 집계 (트렌드 분석) ───────────────────────────────────────────────────
+router.get("/events/daily", async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const conditions   = [];
+    const params       = [];
+    if (from) { params.push(from); conditions.push(`timestamp >= $${params.length}`); }
+    if (to)   { params.push(to);   conditions.push(`timestamp <= $${params.length}`); }
+    const where = conditions.length ? "WHERE " + conditions.join(" AND ") : "";
+    const result = await pool.query(
+      `SELECT date_trunc('day', timestamp) AS day, label, COUNT(*) AS count
+       FROM traffic_events ${where}
+       GROUP BY day, label ORDER BY day ASC`,
+      params
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── 인시던트 CRUD ──────────────────────────────────────────────────────────────
+router.get("/incidents", async (req, res) => {
+  try {
+    const { status, label } = req.query;
+    const data = await getIncidents({ status, label });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post("/incidents", async (req, res) => {
+  try {
+    const { event_id, label, severity, title, notes } = req.body;
+    if (!label) return res.status(400).json({ error: "label은 필수입니다." });
+    const row = await createIncident({ event_id, label, severity, title, notes });
+    res.status(201).json(row);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put("/incidents/:id", async (req, res) => {
+  try {
+    const id  = parseInt(req.params.id);
+    const row = await updateIncident(id, req.body);
+    if (!row) return res.status(404).json({ error: "인시던트를 찾을 수 없습니다." });
+    res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete("/incidents/:id", async (req, res) => {
+  try {
+    await deleteIncident(parseInt(req.params.id));
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── 모델 성능 메트릭 ──────────────────────────────────────────────────────────
+router.get("/model-metrics", async (req, res) => {
+  try {
+    const r = await axios.get(
+      `${process.env.ML_SERVER_URL || "http://127.0.0.1:8000"}/metrics`,
+      { timeout: 3000 }
+    );
+    res.json(r.data);
+  } catch {
+    res.status(503).json({ error: "ML 서버에서 메트릭을 가져올 수 없습니다." });
+  }
 });
 
 module.exports = router;

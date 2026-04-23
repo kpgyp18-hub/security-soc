@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useTheme } from "../context/ThemeContext";
 import DateRangePicker from "../components/DateRangePicker/DateRangePicker";
+import HourlyHeatmap   from "../components/HourlyHeatmap/HourlyHeatmap";
+import TrendChart      from "../components/TrendChart/TrendChart";
 import { printReportPDF } from "../utils/reportPDF";
 
 const LABEL_COLORS = {
@@ -27,6 +29,7 @@ export default function ReportPage() {
   const [rangeTo,   setRangeTo]   = useState(null); // ISO | null
   const [stats,     setStats]     = useState([]);
   const [hourly,    setHourly]    = useState([]);
+  const [daily,     setDaily]     = useState([]);
   const [health,    setHealth]    = useState(null);
   const [exporting, setExporting] = useState(false);
   const [loading,   setLoading]   = useState(false);
@@ -51,10 +54,12 @@ export default function ReportPage() {
     Promise.all([
       fetch(`/api/stats${q}`).then((r) => r.json()).catch(() => []),
       fetch(`/api/events/hourly${q}`).then((r) => r.json()).catch(() => []),
+      fetch(`/api/events/daily${q}`).then((r) => r.json()).catch(() => []),
       fetch("/api/health").then((r) => r.json()).catch(() => null),
-    ]).then(([s, h, hl]) => {
+    ]).then(([s, h, d, hl]) => {
       setStats(Array.isArray(s) ? s : []);
       setHourly(h);
+      setDaily(d);
       setHealth(hl);
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -235,6 +240,16 @@ export default function ReportPage() {
                 <p style={{ color: tokens.textDim, fontSize: "13px" }}>시스템 정보를 불러올 수 없습니다</p>
               )}
             </div>
+          </div>
+
+          {/* 공격 트렌드 */}
+          <div style={{ marginBottom: "24px" }}>
+            <TrendChart data={daily} />
+          </div>
+
+          {/* 시간대별 히트맵 */}
+          <div style={{ marginBottom: "24px" }}>
+            <HourlyHeatmap data={hourly} />
           </div>
 
           {/* 안내 문구 */}

@@ -3,9 +3,11 @@ import { NavLink } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 
 const NAV_ITEMS = [
-  { to: "/",        icon: "📡", label: "모니터링" },
-  { to: "/attacks", icon: "🛡️", label: "공격 패턴" },
-  { to: "/report",  icon: "📊", label: "리포트" },
+  { to: "/",          icon: "📡", label: "모니터링" },
+  { to: "/attacks",   icon: "🛡️", label: "공격 패턴" },
+  { to: "/report",    icon: "📊", label: "리포트" },
+  { to: "/incidents", icon: "🚩", label: "인시던트" },
+  { to: "/retrain",   icon: "🔁", label: "재학습" },
 ];
 
 export default function Sidebar() {

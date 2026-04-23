@@ -8,12 +8,14 @@ const { initWebSocket, broadcast } = require("./websocket/ws");
 const { startProducer } = require("./kafka/producer");
 const { startConsumer, setBroadcast } = require("./kafka/consumer");
 const { startMaintenance } = require("./maintenance");
-const apiRouter = require("./routes/api");
+const apiRouter     = require("./routes/api");
+const retrainRouter = require("./routes/retrain");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api", apiRouter);
+app.use("/api/retrain", retrainRouter);
 
 const server = http.createServer(app);
 initWebSocket(server);

@@ -10,6 +10,20 @@ const ALERT_RULES = [
   { label: "Botnet",     threshold: 3,  windowSec: 60 },
 ];
 
+function getAlertRules() {
+  return ALERT_RULES.map((r) => ({ ...r }));
+}
+
+function updateAlertRule(label, updates) {
+  const rule = ALERT_RULES.find((r) => r.label === label);
+  if (!rule) return false;
+  if (updates.threshold !== undefined) rule.threshold = Math.max(1, parseInt(updates.threshold));
+  if (updates.windowSec !== undefined) rule.windowSec = Math.max(10, parseInt(updates.windowSec));
+  // 규칙이 바뀌면 해당 레이블의 슬라이딩 윈도우 초기화
+  if (windows[label]) windows[label] = [];
+  return true;
+}
+
 // 레이블별 최근 이벤트 타임스탬프 슬라이딩 윈도우
 const windows = {};
 
@@ -82,4 +96,4 @@ async function sendSlack(alert) {
   });
 }
 
-module.exports = { check, setBroadcast };
+module.exports = { check, setBroadcast, getAlertRules, updateAlertRule };

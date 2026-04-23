@@ -10,6 +10,7 @@ import pandas as pd
 from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
+import json
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.utils import resample
 import joblib
@@ -175,6 +176,7 @@ def train(df: pd.DataFrame):
     )
 
     y_pred = model.predict(X_test)
+    report = classification_report(y_test, y_pred, target_names=le.classes_, output_dict=True)
     print("\n[분류 리포트]")
     print(classification_report(y_test, y_pred, target_names=le.classes_))
 
@@ -182,6 +184,11 @@ def train(df: pd.DataFrame):
     joblib.dump(model, os.path.join(MODEL_DIR, "xgboost_model.pkl"))
     joblib.dump(le, os.path.join(MODEL_DIR, "label_encoder.pkl"))
     joblib.dump(FEATURE_NAMES, os.path.join(MODEL_DIR, "feature_names.pkl"))
+
+    metrics_path = os.path.join(MODEL_DIR, "metrics.json")
+    with open(metrics_path, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2)
+    print(f"메트릭 저장 완료: {metrics_path}")
     print(f"\n모델 저장 완료: {MODEL_DIR}")
 
 

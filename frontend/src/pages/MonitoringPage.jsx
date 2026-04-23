@@ -1,10 +1,16 @@
-import React, { useEffect, useState } from "react";
-import useWebSocket from "../hooks/useWebSocket";
-import TrafficChart from "../components/TrafficChart/TrafficChart";
-import AlertTable   from "../components/AlertTable/AlertTable";
-import AlertToast   from "../components/AlertToast/AlertToast";
-import HealthPanel  from "../components/HealthPanel/HealthPanel";
+import React, { useEffect, useState, useCallback } from "react";
+import useWebSocket        from "../hooks/useWebSocket";
+import useNotification     from "../hooks/useNotification";
+import TrafficChart        from "../components/TrafficChart/TrafficChart";
+import AlertTable          from "../components/AlertTable/AlertTable";
+import AlertToast          from "../components/AlertToast/AlertToast";
+import AlertHistoryPanel   from "../components/AlertHistoryPanel/AlertHistoryPanel";
+import AlertRulesPanel     from "../components/AlertRulesPanel/AlertRulesPanel";
+import CriticalAlertModal  from "../components/CriticalAlertModal/CriticalAlertModal";
+import HealthPanel         from "../components/HealthPanel/HealthPanel";
 import { useTheme } from "../context/ThemeContext";
+
+const HIGH_RISK = new Set(["DDoS", "DoS", "BruteForce"]);
 
 const LABEL_COLORS = {
   BENIGN:     "#22c55e",
@@ -21,12 +27,15 @@ const MAX_TOASTS = 4;
 const TOAST_TTL  = 8000;
 
 export default function MonitoringPage() {
-  const { tokens } = useTheme();
+  const { tokens }                       = useTheme();
   const { lastEvent, lastAlert, connected } = useWebSocket(WS_URL);
-  const [events,    setEvents]    = useState([]);
-  const [stats,     setStats]     = useState([]);
-  const [chartData, setChartData] = useState([]);
-  const [toasts,    setToasts]    = useState([]);
+  const { notify }                       = useNotification();
+  const [events,         setEvents]         = useState([]);
+  const [stats,          setStats]          = useState([]);
+  const [chartData,      setChartData]      = useState([]);
+  const [toasts,         setToasts]         = useState([]);
+  const [alertHistory,   setAlertHistory]   = useState([]);
+  const [criticalAlert,  setCriticalAlert]  = useState(null);
 
   useEffect(() => {
     fetch("/api/events?limit=200").then((r) => r.json()).then(setEvents).catch(() => {});
@@ -51,6 +60,9 @@ export default function MonitoringPage() {
   useEffect(() => {
     if (!lastAlert) return;
     setToasts((prev) => [lastAlert, ...prev].slice(0, MAX_TOASTS));
+    setAlertHistory((prev) => [lastAlert, ...prev].slice(0, 50));
+    notify(lastAlert);
+    if (HIGH_RISK.has(lastAlert.label)) setCriticalAlert(lastAlert);
     const id = setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== lastAlert.id)), TOAST_TTL);
     return () => clearTimeout(id);
   }, [lastAlert]);
@@ -60,6 +72,7 @@ export default function MonitoringPage() {
 
   return (
     <>
+      <CriticalAlertModal alert={criticalAlert} onDismiss={() => setCriticalAlert(null)} />
       <AlertToast alerts={toasts} />
       <div style={{ padding: "28px", maxWidth: "1300px" }}>
 
@@ -98,6 +111,11 @@ export default function MonitoringPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <DistributionCard stats={stats} totalCount={totalCount} tokens={tokens} labelColors={LABEL_COLORS} />
             <HealthPanel wsConnected={connected} />
+            <AlertHistoryPanel
+              history={alertHistory}
+              onClear={() => setAlertHistory([])}
+            />
+            <AlertRulesPanel />
           </div>
           <AlertTable events={events} labelColors={LABEL_COLORS} />
         </div>

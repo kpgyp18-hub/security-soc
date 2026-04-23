@@ -12,6 +12,15 @@ const ATTACKS = [
     indicators: ["급격한 인바운드 패킷 증가", "다수 IP에서 동시 접속", "대역폭 포화 상태", "SYN 플러드, UDP 플러드, HTTP 플러드"],
     features: { flow_bytes_per_sec: "매우 높음", syn_flag_count: "높음", total_fwd_packets: "매우 높음", flow_duration: "짧음" },
     mitigation: ["트래픽 스크러빙 서비스 (CloudFlare 등)", "Rate Limiting", "ISP 레벨 업스트림 필터링", "Anycast 분산 네트워크"],
+    mitre: {
+      tactic: "Impact",
+      tacticId: "TA0040",
+      techniques: [
+        { id: "T1498",     name: "Network Denial of Service" },
+        { id: "T1498.001", name: "Direct Network Flood" },
+        { id: "T1498.002", name: "Reflection Amplification" },
+      ],
+    },
   },
   {
     id: "DoS",
@@ -23,6 +32,15 @@ const ATTACKS = [
     indicators: ["서버 응답 지연 또는 무응답", "연결 수 급증", "CPU/메모리 사용률 급등", "비정상적으로 긴 연결 유지"],
     features: { flow_duration: "매우 길거나 매우 짧음", flow_packets_per_sec: "높음 또는 매우 낮음", syn_flag_count: "높음", idle_mean: "높음 (Slowloris)" },
     mitigation: ["연결 제한 및 타임아웃 설정", "Web Application Firewall", "IP 차단 리스트", "SYN 쿠키 활성화"],
+    mitre: {
+      tactic: "Impact",
+      tacticId: "TA0040",
+      techniques: [
+        { id: "T1499",     name: "Endpoint Denial of Service" },
+        { id: "T1499.001", name: "OS Exhaustion Flood" },
+        { id: "T1499.002", name: "Service Exhaustion Flood" },
+      ],
+    },
   },
   {
     id: "PortScan",
@@ -34,6 +52,15 @@ const ATTACKS = [
     indicators: ["다수 포트에 대한 순차적 접속 시도", "짧은 연결 후 즉시 종료 (RST)", "비정상적 SYN만 전송", "동일 IP에서 대량 포트 시도"],
     features: { total_fwd_packets: "낮음 (1~2개)", rst_flag_count: "높음", fin_flag_count: "낮음", down_up_ratio: "낮음" },
     mitigation: ["포트 스캔 탐지 IDS/IPS", "불필요한 포트 차단", "포트 노킹", "방화벽 로그 모니터링"],
+    mitre: {
+      tactic: "Discovery",
+      tacticId: "TA0007",
+      techniques: [
+        { id: "T1046", name: "Network Service Discovery" },
+        { id: "T1595", name: "Active Scanning" },
+        { id: "T1595.001", name: "Scanning IP Blocks" },
+      ],
+    },
   },
   {
     id: "BruteForce",
@@ -45,6 +72,15 @@ const ATTACKS = [
     indicators: ["동일 서비스에 반복 로그인 실패", "짧은 간격의 연속 연결", "다양한 사용자명/패스워드 시도", "특정 포트(22, 21, 3389)에 트래픽 집중"],
     features: { flow_packets_per_sec: "일정하게 높음", fwd_iat_mean: "매우 짧음", total_fwd_packets: "균일함", ack_flag_count: "높음" },
     mitigation: ["계정 잠금 정책", "다단계 인증(MFA)", "fail2ban 설치", "기본 포트 변경 (SSH 22 → 비표준)"],
+    mitre: {
+      tactic: "Credential Access",
+      tacticId: "TA0006",
+      techniques: [
+        { id: "T1110",     name: "Brute Force" },
+        { id: "T1110.001", name: "Password Guessing" },
+        { id: "T1110.003", name: "Password Spraying" },
+      ],
+    },
   },
   {
     id: "WebAttack",
@@ -56,6 +92,15 @@ const ATTACKS = [
     indicators: ["비정상적 HTTP 파라미터", "긴 URL 또는 특수문자 포함 요청", "짧은 세션 내 다수 요청", "4xx/5xx 에러 급증"],
     features: { avg_packet_size: "특징적으로 큼 (페이로드 포함)", flow_bytes_per_sec: "중간", psh_flag_count: "높음", flow_duration: "짧음" },
     mitigation: ["Web Application Firewall (WAF)", "입력값 검증 및 이스케이프", "준비된 쿼리(Prepared Statement)", "Content Security Policy 헤더"],
+    mitre: {
+      tactic: "Initial Access",
+      tacticId: "TA0001",
+      techniques: [
+        { id: "T1190", name: "Exploit Public-Facing Application" },
+        { id: "T1059.007", name: "JavaScript (XSS)" },
+        { id: "T1203", name: "Exploitation for Client Execution" },
+      ],
+    },
   },
   {
     id: "Botnet",
@@ -67,6 +112,15 @@ const ATTACKS = [
     indicators: ["주기적인 외부 서버 통신 (비코닝)", "비정상 시간대 트래픽", "암호화된 C&C 통신", "내부 → 외부 방향 트래픽 증가"],
     features: { fwd_iat_mean: "주기적으로 일정", idle_mean: "높음 (대기 상태)", down_up_ratio: "낮음", flow_duration: "매우 길거나 주기적"},
     mitigation: ["DNS 싱크홀", "알려진 C&C IP/도메인 차단", "엔드포인트 보안 솔루션", "이상 트래픽 패턴 모니터링"],
+    mitre: {
+      tactic: "Command and Control",
+      tacticId: "TA0011",
+      techniques: [
+        { id: "T1071",     name: "Application Layer Protocol" },
+        { id: "T1071.001", name: "Web Protocols (HTTP/S C2)" },
+        { id: "T1583.005", name: "Botnet Infrastructure" },
+      ],
+    },
   },
 ];
 
@@ -158,18 +212,67 @@ export default function AttackPatternsPage() {
             </div>
           </div>
 
-          {/* 우측: ML 피처 특성 */}
-          <div style={{ background: tokens.bgCard, border: `1px solid ${tokens.border}`, borderRadius: "12px", padding: "24px", alignSelf: "start" }}>
-            <h3 style={{ margin: "0 0 16px", fontSize: "14px", color: tokens.textPrimary, fontWeight: 600 }}>📐 XGBoost 모델 피처 특성</h3>
-            <p style={{ margin: "0 0 16px", fontSize: "12px", color: tokens.textMuted }}>CICIDS2017 학습 기준, 해당 공격 유형에서 두드러지는 피처 패턴</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {Object.entries(attack.features).map(([key, val]) => (
-                <div key={key} style={{ padding: "10px 12px", background: tokens.bgDeep, borderRadius: "8px" }}>
-                  <div style={{ fontSize: "11px", color: tokens.textMuted, marginBottom: "2px" }}>{FEATURE_LABELS[key] || key}</div>
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: attack.color }}>{val}</div>
-                </div>
-              ))}
+          {/* 우측: ML 피처 특성 + MITRE ATT&CK */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ background: tokens.bgCard, border: `1px solid ${tokens.border}`, borderRadius: "12px", padding: "24px" }}>
+              <h3 style={{ margin: "0 0 16px", fontSize: "14px", color: tokens.textPrimary, fontWeight: 600 }}>📐 XGBoost 모델 피처 특성</h3>
+              <p style={{ margin: "0 0 16px", fontSize: "12px", color: tokens.textMuted }}>CICIDS2017 학습 기준, 해당 공격 유형에서 두드러지는 피처 패턴</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {Object.entries(attack.features).map(([key, val]) => (
+                  <div key={key} style={{ padding: "10px 12px", background: tokens.bgDeep, borderRadius: "8px" }}>
+                    <div style={{ fontSize: "11px", color: tokens.textMuted, marginBottom: "2px" }}>{FEATURE_LABELS[key] || key}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: attack.color }}>{val}</div>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* MITRE ATT&CK 카드 */}
+            {attack.mitre && (
+              <div style={{ background: tokens.bgCard, border: `1px solid ${tokens.border}`, borderRadius: "12px", padding: "24px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+                  <h3 style={{ margin: 0, fontSize: "14px", color: tokens.textPrimary, fontWeight: 600 }}>🎯 MITRE ATT&CK</h3>
+                  <a
+                    href={`https://attack.mitre.org/tactics/${attack.mitre.tacticId}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: "10px", color: "#3b82f6", textDecoration: "none", padding: "2px 6px", border: "1px solid #3b82f622", borderRadius: "4px", background: "#3b82f610" }}
+                  >
+                    ATT&CK ↗
+                  </a>
+                </div>
+
+                {/* 전술 뱃지 */}
+                <div style={{ marginBottom: "14px" }}>
+                  <div style={{ fontSize: "11px", color: tokens.textMuted, marginBottom: "6px" }}>전술 (Tactic)</div>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "5px 12px", borderRadius: "999px", background: `${attack.color}18`, border: `1px solid ${attack.color}44` }}>
+                    <span style={{ fontSize: "12px", fontWeight: 700, color: attack.color }}>{attack.mitre.tacticId}</span>
+                    <span style={{ fontSize: "12px", color: tokens.textSecondary }}>{attack.mitre.tactic}</span>
+                  </div>
+                </div>
+
+                {/* 기술 목록 */}
+                <div>
+                  <div style={{ fontSize: "11px", color: tokens.textMuted, marginBottom: "8px" }}>기술 (Techniques)</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {attack.mitre.techniques.map((t) => (
+                      <a
+                        key={t.id}
+                        href={`https://attack.mitre.org/techniques/${t.id.replace(".", "/")}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "8px", background: tokens.bgDeep, textDecoration: "none", border: `1px solid ${tokens.border}`, transition: "all 0.15s" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = attack.color; e.currentTarget.style.background = `${attack.color}0d`; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = tokens.border; e.currentTarget.style.background = tokens.bgDeep; }}
+                      >
+                        <span style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: 700, color: attack.color, minWidth: "72px" }}>{t.id}</span>
+                        <span style={{ fontSize: "12px", color: tokens.textSecondary }}>{t.name}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
